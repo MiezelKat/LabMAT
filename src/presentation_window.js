@@ -4,6 +4,8 @@ import RaisedButton from 'material-ui/RaisedButton';
 import LinearProgress from 'material-ui/LinearProgress';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import injectTapEventPlugin from 'react-tap-event-plugin';
+import Sound from 'react-sound'
+
 const ipc = require('electron').ipcRenderer;
 injectTapEventPlugin();
 
@@ -21,12 +23,16 @@ const Progress = ({completed, visible}) => {
   }
 };
 
-const Main = ({height, backgroundColor, question, completed, visible}) => (
+const Main = ({height, backgroundColor, question, completed, visible, buzzOn, buzzOnFinished}) => (
   <div style={{backgroundColor: backgroundColor}}>
     <div style={{height: height, display: "flex", alignItems: "center", justifyContent: "center"}}>
       <span style={{fontSize: 80}}>{question}</span>
     </div>
-
+    <Sound
+          url="sounds/buzzer_x.wav"
+          playStatus={buzzOn ? Sound.status.PLAYING : Sound.status.STOPPED}
+          onFinishedPlaying={buzzOnFinished}
+          />
     <Progress completed={completed} visible={visible}/>
   </div>
 )
@@ -40,6 +46,7 @@ class PresentationWindow extends React.Component {
       this.state.visible = false;
       this.state.background = "white";
       this.state.completed = 100;
+      this.state.buzzOn = false;
 
       window.onresize = (event) => {
           this.setState({height: window.innerHeight})
@@ -65,6 +72,7 @@ class PresentationWindow extends React.Component {
           } else {
             this.setState({background: "red"})
             this.setState({visible: false});
+            this.setState({buzzOn: true});
           }
 
           this.setState({question: ""})
@@ -73,6 +81,7 @@ class PresentationWindow extends React.Component {
       ipc.on('progress', (event, message) => {
           this.setState({completed: message.progress * 10})
       })
+
     }
 
     render() {
@@ -80,7 +89,9 @@ class PresentationWindow extends React.Component {
                      question={this.state.question}
                      backgroundColor={this.state.background}
                      completed={this.state.completed}
-                     visible={this.state.visible}/>
+                     visible={this.state.visible}
+                     buzzOn={this.state.buzzOn}
+                     buzzOnFinished={() => this.setState({buzzOn: false})}/>
     }
 }
 

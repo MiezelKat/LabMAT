@@ -14,7 +14,7 @@ const StartButton = ({height, pIDValue, onTouchTap, onPIDChange, startEnabled}) 
     </MuiThemeProvider >
     <div style={{height: "40px"}}/>
     <MuiThemeProvider >
-      <RaisedButton label="START [A]" style={{height: 50, width: 140}} disabled={!startEnabled} onTouchTap={onTouchTap}/>
+      <RaisedButton label="START" style={{height: 50, width: 140}} disabled={!startEnabled} onTouchTap={onTouchTap}/>
     </MuiThemeProvider >
   </div>
 )
@@ -59,9 +59,9 @@ class MainWindow extends React.Component {
         if(event.keyCode === 65 && this.state.start === true) {
           this.stop()
           // A
-        } else if(event.keyCode === 65 && this.state.start === false) {
-          this.start()
-          // S
+        // } else if(event.keyCode === 65 && this.state.start === false) {
+        //   this.start()
+        //   // S
         } else if(event.keyCode === 83 && this.state.start === true) {
           this.next(false)
           // D
