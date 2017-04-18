@@ -1,17 +1,22 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import RaisedButton from 'material-ui/RaisedButton';
+import TextField from 'material-ui/TextField';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 const ipc = require('electron').ipcRenderer;
 injectTapEventPlugin();
 
-const StartButton = ({height, onTouchTap}) => (
-    <div style={{height: height, display: "flex", alignItems: "center", justifyContent: "center"}}>
-      <MuiThemeProvider >
-        <RaisedButton label="START [A]" style={{height: 50, width: 140}} onTouchTap={onTouchTap}/>
-      </MuiThemeProvider >
-    </div>
+const StartButton = ({height, pIDValue, onTouchTap, onPIDChange, startEnabled}) => (
+  <div style={{height: height, display: "flex", flexDirection:"column", alignItems: "center", justifyContent: "center"}}>
+    <MuiThemeProvider >
+      <TextField floatingLabelText="ParticipantID & Condition" value={pIDValue} onChange={onPIDChange}/>
+    </MuiThemeProvider >
+    <div style={{height: "40px"}}/>
+    <MuiThemeProvider >
+      <RaisedButton label="START [A]" style={{height: 50, width: 140}} disabled={!startEnabled} onTouchTap={onTouchTap}/>
+    </MuiThemeProvider >
+  </div>
 )
 
 const Main = ({height, time, question, word_answer, onStop, onFalse, onCorrect}) => (
@@ -42,6 +47,8 @@ class MainWindow extends React.Component {
       this.state.question = "";
       this.state.word_answer = "";
       this.state.time = "-";
+      this.state.pIDValue = ""
+      this.state.startEnabled = false
 
       window.onresize = (event) => {
           this.setState({height: window.innerHeight})
@@ -85,19 +92,27 @@ class MainWindow extends React.Component {
     }
 
     start() {
-      ipc.send("start")
+      ipc.send("start", this.state.pIDValue)
       this.setState({start: true})
     }
 
     stop() {
       ipc.send("stop")
       this.setState({start: false})
+      this.setState({pIDValue: ""})
+      this.setState({startEnabled: false})
       clearInterval(this.timer)
     }
 
     next(result, reason) {
       clearInterval(this.timer)
       ipc.send("next", {result: result, reason: reason})
+    }
+
+    handlePIDChanged(e){
+      let newString = e.target.value
+      this.setState({startEnabled: newString.length > 0})
+      this.setState({pIDValue: e.target.value});
     }
 
     render() {
@@ -111,7 +126,11 @@ class MainWindow extends React.Component {
                     timerEnabled={this.state.timerEnabled}
                     time={this.state.time}/>
         } else {
-          return <StartButton height={this.state.height} onTouchTap={() => this.start()}/>
+          return <StartButton height={this.state.height}
+                    pIDValue={this.state.pIDValue}
+                    onTouchTap={() => this.start()}
+                    startEnabled={this.state.startEnabled}
+                    onPIDChange={(e) => this.handlePIDChanged(e)}/>
         }
     }
 }

@@ -17,6 +17,8 @@ let presWin
 var sinceStarted = new Date()
 var sinceTaskStart = new Date()
 
+var pIDValue = ""
+
 function createWindow () {
   win = new BrowserWindow({width: 800, height: 600})
 
@@ -48,6 +50,8 @@ app.on('activate', () => {
 })
 
 ipc.on('start', (event, message) => {
+
+  pIDValue = message
   if(presWin === undefined) {
     presWin = new BrowserWindow({width: 800, height: 600});
     presWin.loadURL(url.format({
@@ -83,7 +87,7 @@ ipc.on('stop', (event, message) => {
       res += d + "\n";
     });
 
-    fs.writeFileSync(path.join(currDirName, `/output_${new Date().toISOString()}.csv`), res);
+    fs.writeFileSync(path.join(currDirName, `/output_${pIDValue}_${new Date().toISOString()}.csv`), res);
     outputData = [];
 
     if(inputData.length === inputDataIndex) {
