@@ -14,7 +14,8 @@ let outputData = [[]]
 let win
 let presWin
 
-var sinceStart = new Date()
+var sinceStarted = new Date()
+var sinceTaskStart = new Date()
 
 function createWindow () {
   win = new BrowserWindow({width: 800, height: 600})
@@ -62,14 +63,15 @@ ipc.on('start', (event, message) => {
     })
 
     presWin.webContents.on('did-finish-load', () => {
-      win.webContents.send('question', inputData[inputDataIndex].question_answer);
+      win.webContents.send('question', [inputData[inputDataIndex].question_answer,inputData[inputDataIndex].word_answer]);
       presWin.webContents.send('question', inputData[inputDataIndex].question);
     })
   } else {
-    win.webContents.send('question', inputData[inputDataIndex].question_answer);
+    win.webContents.send('question', [inputData[inputDataIndex].question_answer,inputData[inputDataIndex].word_answer]);
     presWin.webContents.send('question', inputData[inputDataIndex].question);
   }
-  sinceStart = new Date()
+  sinceStarted = new Date()
+  sinceTaskStart = new Date()
 })
 
 ipc.on('stop', (event, message) => {
@@ -92,7 +94,7 @@ ipc.on('stop', (event, message) => {
 
 ipc.on('next', (event, message) => {
     inputDataIndex++
-    outputData.push([message.reason,Math.abs(sinceStart.getTime() - (new Date()).getTime())])
+    outputData.push([message.reason,Math.abs(sinceTaskStart.getTime() - (new Date()).getTime())])
 
     if(inputData.length === inputDataIndex) {
       return win.webContents.send('stop');
@@ -101,16 +103,16 @@ ipc.on('next', (event, message) => {
     if(message.result === true) {
       presWin.webContents.send('result', true);
       setTimeout(() => {
-        win.webContents.send('question', inputData[inputDataIndex].question_answer);
+        win.webContents.send('question', [inputData[inputDataIndex].question_answer,inputData[inputDataIndex].word_answer]);
         presWin.webContents.send('question', inputData[inputDataIndex].question);
-        sinceStart = new Date()
+        sinceTaskStart = new Date()
       }, 1000)
     } else {
       presWin.webContents.send('result', false);
       setTimeout(() => {
-        win.webContents.send('question', inputData[inputDataIndex].question_answer);
+        win.webContents.send('question', [inputData[inputDataIndex].question_answer,inputData[inputDataIndex].word_answer]);
         presWin.webContents.send('question', inputData[inputDataIndex].question);
-        sinceStart = new Date()
+        sinceTaskStart = new Date()
       }, 1000)
     }
 })
