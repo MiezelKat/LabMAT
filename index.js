@@ -9,10 +9,12 @@ const currDirName = __dirname
 const csvData = fs.readFileSync(path.join(currDirName, '/input.csv'), {encoding: 'utf8'})
 const inputData = parse(csvData, {columns: true})
 let inputDataIndex = 0
-let outputData = []
+let outputData = [[]]
 
 let win
 let presWin
+
+var sinceStart = new Date()
 
 function createWindow () {
   win = new BrowserWindow({width: 800, height: 600})
@@ -67,13 +69,14 @@ ipc.on('start', (event, message) => {
     win.webContents.send('question', inputData[inputDataIndex].question_answer);
     presWin.webContents.send('question', inputData[inputDataIndex].question);
   }
+  sinceStart = new Date()
 })
 
 ipc.on('stop', (event, message) => {
   presWin.webContents.send('stop');
 
   if(outputData.length > 0) {
-    let res = "result\n";
+    let res = "result,time[ms]\n";
     outputData.forEach((d) => {
       res += d + "\n";
     });
@@ -89,7 +92,7 @@ ipc.on('stop', (event, message) => {
 
 ipc.on('next', (event, message) => {
     inputDataIndex++
-    outputData.push(message.reason)
+    outputData.push([message.reason,Math.abs(sinceStart.getTime() - (new Date()).getTime())])
 
     if(inputData.length === inputDataIndex) {
       return win.webContents.send('stop');
@@ -100,12 +103,14 @@ ipc.on('next', (event, message) => {
       setTimeout(() => {
         win.webContents.send('question', inputData[inputDataIndex].question_answer);
         presWin.webContents.send('question', inputData[inputDataIndex].question);
+        sinceStart = new Date()
       }, 1000)
     } else {
       presWin.webContents.send('result', false);
       setTimeout(() => {
         win.webContents.send('question', inputData[inputDataIndex].question_answer);
         presWin.webContents.send('question', inputData[inputDataIndex].question);
+        sinceStart = new Date()
       }, 1000)
     }
 })
