@@ -86,8 +86,8 @@ ipc.on('stop', (event, message) => {
     outputData.forEach((d) => {
       res += d + "\n";
     });
-
-    fs.writeFileSync(path.join(currDirName, `/output_${pIDValue}_${new Date().toISOString()}.csv`), res);
+// /../../../../
+    fs.writeFileSync(path.join(currDirName, `/output/${pIDValue}_${new Date().toISOString()}.csv`), res);
     outputData = [];
 
     if(inputData.length === inputDataIndex) {
@@ -106,6 +106,7 @@ ipc.on('next', (event, message) => {
 
     if(message.result === true) {
       presWin.webContents.send('result', true);
+      win.webContents.send('block');
       setTimeout(() => {
         win.webContents.send('question', [inputData[inputDataIndex].question_answer,inputData[inputDataIndex].word_answer]);
         presWin.webContents.send('question', inputData[inputDataIndex].question);
@@ -113,6 +114,7 @@ ipc.on('next', (event, message) => {
       }, 1000)
     } else {
       presWin.webContents.send('result', false);
+      win.webContents.send('block');
       setTimeout(() => {
         win.webContents.send('question', [inputData[inputDataIndex].question_answer,inputData[inputDataIndex].word_answer]);
         presWin.webContents.send('question', inputData[inputDataIndex].question);

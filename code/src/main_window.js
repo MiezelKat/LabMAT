@@ -2,24 +2,48 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import RaisedButton from 'material-ui/RaisedButton';
 import TextField from 'material-ui/TextField';
+import Drawer from 'material-ui/Drawer';
+import MenuItem from 'material-ui/MenuItem';
+import {List, ListItem} from 'material-ui/List';
+import Subheader from 'material-ui/Subheader';
+import FontIcon from 'material-ui/FontIcon';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import injectTapEventPlugin from 'react-tap-event-plugin';
+import FloatingActionButton from 'material-ui/FloatingActionButton';
 const ipc = require('electron').ipcRenderer;
 injectTapEventPlugin();
 
 const StartButton = ({height, pIDValue, onTouchTap, onPIDChange, startEnabled}) => (
   <div style={{height: height, display: "flex", flexDirection:"column", alignItems: "center", justifyContent: "center"}}>
+  <div style={{position: "absolute", top: 10, left: 10}}><MuiThemeProvider >
+    <FloatingActionButton mini={true}>
+      <FontIcon className="material-icons" >settings</FontIcon>
+    </FloatingActionButton>
+  </MuiThemeProvider ></div>
     <MuiThemeProvider >
       <TextField floatingLabelText="ParticipantID & Condition" value={pIDValue} onChange={onPIDChange}/>
     </MuiThemeProvider >
     <div style={{height: "40px"}}/>
     <MuiThemeProvider >
-      <RaisedButton label="START" style={{height: 50, width: 140}} disabled={!startEnabled} onTouchTap={onTouchTap}/>
+      <RaisedButton label="START" style={{height: 50, width: 140}} disabled={!startEnabled} primary={true} onTouchTap={onTouchTap}/>
+    </MuiThemeProvider >
+    <MuiThemeProvider >
+      <Drawer open={false} docked={false}>
+        <div style={{alignItems: "center", textAlign: "center"}}>
+          <Subheader>Options</Subheader>
+          <TextField style={{ marginRight: 20, marginLeft: 20, width: 210 }} floatingLabelText="Time (seconds)" value={pIDValue} onChange={onPIDChange}/>
+          <TextField style={{ marginRight: 20, marginLeft: 20, width: 210 }} floatingLabelText="Task Time (seconds)" value={pIDValue} onChange={onPIDChange}/>
+          <RaisedButton label="SAVE" style={{margin: 20, height: 50, width: 140, textAlign:"center"}} onTouchTap={onTouchTap}/>
+          <FloatingActionButton >
+            <FontIcon className="material-icons" >settings</FontIcon>
+          </FloatingActionButton>
+        </div>
+      </Drawer>
     </MuiThemeProvider >
   </div>
 )
 
-const Main = ({height, time, question, word_answer, onStop, onFalse, onCorrect}) => (
+const Main = ({height, time, question, word_answer, blocked, onStop, onFalse, onCorrect}) => (
   <div>
     <div style={{height: height, display: "flex", flexDirection:"column", alignItems: "center", justifyContent: "center"}}>
       <span style={{fontSize: 80, textAlign: "center"}}>{question}</span>
@@ -30,8 +54,8 @@ const Main = ({height, time, question, word_answer, onStop, onFalse, onCorrect})
         <div style={{marginLeft: 20, height:60}}>
           <span>{time}</span>
           <RaisedButton label="Stop [A]" style={{height: 50, width: 140, marginRight: 20, marginLeft: 90}} onTouchTap={onStop}/>
-          <RaisedButton label="False [S]" style={{height: 50, width: 140, marginRight: 20, marginLeft: 40}} onTouchTap={onFalse}/>
-          <RaisedButton label="Correct [D]" style={{height: 50, width: 140, marginRight: 20}} onTouchTap={onCorrect}/>
+          <RaisedButton label="False [S]" disabled={blocked} style={{height: 50, width: 140, marginRight: 20, marginLeft: 40}} onTouchTap={onFalse}/>
+          <RaisedButton label="Correct [D]" disabled={blocked} style={{height: 50, width: 140, marginRight: 20}} onTouchTap={onCorrect}/>
         </div>
       </MuiThemeProvider >
     </div>
@@ -49,6 +73,7 @@ class MainWindow extends React.Component {
       this.state.time = "-";
       this.state.pIDValue = ""
       this.state.startEnabled = false
+      this.state.blocked = false
 
       window.onresize = (event) => {
           this.setState({height: window.innerHeight})
@@ -56,16 +81,17 @@ class MainWindow extends React.Component {
 
       window.onkeyup = (event) => {
         console.log(event)
+
         if(event.keyCode === 65 && this.state.start === true) {
           this.stop()
           // A
         // } else if(event.keyCode === 65 && this.state.start === false) {
         //   this.start()
         //   // S
-        } else if(event.keyCode === 83 && this.state.start === true) {
+      } else if(event.keyCode === 83 && this.state.start === true && !this.state.blocked) {
           this.next(false)
           // D
-        } else if(event.keyCode === 68 && this.state.start === true) {
+        } else if(event.keyCode === 68 && this.state.start === true && !this.state.blocked) {
           this.next(true)
         }
       };
@@ -74,6 +100,7 @@ class MainWindow extends React.Component {
           this.setState({time: 10})
           this.setState({question: message[0]})
           this.setState({word_answer: message[1]})
+          this.setState({blocked: false})
 
           clearInterval(this.timer)
           this.timer = setInterval(() => {
@@ -89,11 +116,16 @@ class MainWindow extends React.Component {
       ipc.on('stop', (event, message) => {
         this.stop()
       })
+
+      ipc.on('block', (event, message) => {
+        this.setState({blocked: true})
+      })
     }
 
     start() {
       ipc.send("start", this.state.pIDValue)
       this.setState({start: true})
+      this.setState({blocked: false})
     }
 
     stop() {
@@ -120,6 +152,7 @@ class MainWindow extends React.Component {
           return <Main height={this.state.height}
                     question={this.state.question}
                     word_answer={this.state.word_answer}
+                    blocked = {this.state.blocked}
                     onStop={() => this.stop()}
                     onFalse={() => this.next(false, "wrong")}
                     onCorrect={() => this.next(true, "correct")}
