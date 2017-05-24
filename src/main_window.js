@@ -63,15 +63,16 @@ class MainWindow extends React.Component {
         //   this.start()
         //   // S
         } else if(event.keyCode === 83 && this.state.start === true) {
-          this.next(false)
+          this.next(false, "wrong")
           // D
         } else if(event.keyCode === 68 && this.state.start === true) {
-          this.next(true)
+          this.next(true, "right")
         }
       };
 
       ipc.on('question', (event, message) => {
-          this.setState({time: 10})
+        // SET TIME HERE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          this.setState({time: 6})
           this.setState({question: message[0]})
           this.setState({word_answer: message[1]})
 
