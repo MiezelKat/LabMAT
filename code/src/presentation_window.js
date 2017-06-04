@@ -80,7 +80,7 @@ class PresentationWindow extends React.Component {
       })
 
       ipc.on('progress', (event, message) => {
-          this.setState({completed: message.progress * 16})
+          this.setState({completed: message.progress})
       })
 
     }

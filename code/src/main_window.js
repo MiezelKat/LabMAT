@@ -43,7 +43,7 @@ const StartButton = ({height, pIDValue, onTouchTap, onPIDChange, startEnabled}) 
   </div>
 )
 
-const Main = ({height, time, question, word_answer, blocked, onStop, onFalse, onCorrect}) => (
+const Main = ({height, time, question, word_answer, blocked, onStop, onFalse, onCorrect, ttime}) => (
   <div>
     <div style={{height: height, display: "flex", flexDirection:"column", alignItems: "center", justifyContent: "center"}}>
       <span style={{fontSize: 80, textAlign: "center"}}>{question}</span>
@@ -61,6 +61,8 @@ const Main = ({height, time, question, word_answer, blocked, onStop, onFalse, on
     </div>
   </div>
 )
+
+const timePerTask = 5
 
 class MainWindow extends React.Component {
     constructor() {
@@ -97,7 +99,7 @@ class MainWindow extends React.Component {
       };
 
       ipc.on('question', (event, message) => {
-          this.setState({time: 6})
+          this.setState({time: timePerTask})
           this.setState({question: message[0]})
           this.setState({word_answer: message[1]})
           this.setState({blocked: false})
@@ -105,7 +107,8 @@ class MainWindow extends React.Component {
           clearInterval(this.timer)
           this.timer = setInterval(() => {
             this.setState({time: this.state.time - 1})
-            ipc.send("progress", {progress: this.state.time})
+
+            ipc.send("progress", {progress: this.state.time * (100/timePerTask)})
             if(this.state.time === 0) {
               this.next(false, "time over")
               clearInterval(this.timer)
@@ -138,6 +141,7 @@ class MainWindow extends React.Component {
 
     next(result, reason) {
       clearInterval(this.timer)
+      this.setState({ttime: this.state.ttime - 1})
       ipc.send("next", {result: result, reason: reason, question: this.state.question})
     }
 
