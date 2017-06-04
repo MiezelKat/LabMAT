@@ -138,7 +138,7 @@ class MainWindow extends React.Component {
 
     next(result, reason) {
       clearInterval(this.timer)
-      ipc.send("next", {result: result, reason: reason})
+      ipc.send("next", {result: result, reason: reason, question: this.state.question})
     }
 
     handlePIDChanged(e){

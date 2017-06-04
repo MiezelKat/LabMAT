@@ -82,7 +82,7 @@ ipc.on('stop', (event, message) => {
   presWin.webContents.send('stop');
 
   if(outputData.length > 0) {
-    let res = "result,time[ms]\n";
+    let res = "result,time[ms],timestamp,question\n";
     outputData.forEach((d) => {
       res += d + "\n";
     });
@@ -98,7 +98,7 @@ ipc.on('stop', (event, message) => {
 
 ipc.on('next', (event, message) => {
     inputDataIndex++
-    outputData.push([message.reason,Math.abs(sinceTaskStart.getTime() - (new Date()).getTime())])
+    outputData.push([message.reason,Math.abs(sinceTaskStart.getTime() - (new Date()).getTime()),(new Date()),message.question])
 
     if(inputData.length === inputDataIndex) {
       return win.webContents.send('stop');
