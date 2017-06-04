@@ -28,7 +28,6 @@ const Main = ({height, backgroundColor, question, completed, visible, buzzOn, bu
     <div style={{height: height, display: "flex", alignItems: "center", justifyContent: "center"}}>
       <span style={{fontSize: 80}}>{question}</span>
     </div>
-    
     <Sound
           url="sounds/buzzer_x.wav"
           playStatus={buzzOn ? Sound.status.PLAYING : Sound.status.STOPPED}
@@ -67,7 +66,8 @@ class PresentationWindow extends React.Component {
       })
 
       ipc.on('result', (event, message) => {
-          if(message === true) {
+
+          if(message.result === true) {
             this.setState({background: "green"})
             this.setState({visible: false});
           } else {
@@ -76,7 +76,7 @@ class PresentationWindow extends React.Component {
             this.setState({buzzOn: true});
           }
 
-          this.setState({question: ""})
+          this.setState({question: message.reason})
       })
 
       ipc.on('progress', (event, message) => {

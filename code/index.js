@@ -105,7 +105,7 @@ ipc.on('next', (event, message) => {
     }
 
     if(message.result === true) {
-      presWin.webContents.send('result', true);
+      presWin.webContents.send('result', message);
       win.webContents.send('block');
       setTimeout(() => {
         win.webContents.send('question', [inputData[inputDataIndex].question_answer,inputData[inputDataIndex].word_answer]);
@@ -113,7 +113,7 @@ ipc.on('next', (event, message) => {
         sinceTaskStart = new Date()
       }, 1000)
     } else {
-      presWin.webContents.send('result', false);
+      presWin.webContents.send('result', message);
       win.webContents.send('block');
       setTimeout(() => {
         win.webContents.send('question', [inputData[inputDataIndex].question_answer,inputData[inputDataIndex].word_answer]);
