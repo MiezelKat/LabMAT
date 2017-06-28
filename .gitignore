@@ -17,3 +17,6 @@ yarn-debug.log*
 yarn-error.log*
 
 code/node_modules
+MAT-Test-darwin-x64
+MAT-Test-darwin-x64_!
+output

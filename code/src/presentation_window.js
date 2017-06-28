@@ -48,21 +48,30 @@ class PresentationWindow extends React.Component {
       this.state.completed = 100;
       this.state.buzzOn = false;
 
+      this.state.terminated = false;
+
       window.onresize = (event) => {
           this.setState({height: window.innerHeight})
       };
 
       ipc.on('question', (event, message) => {
+        if(!this.state.terminated){
           this.setState({completed: 100});
           this.setState({question: message})
           this.setState({background: "white"})
           this.setState({visible: true});
+        }
+      })
+
+      ipc.on('start', (event, message) => {
+        this.state.terminated = false
       })
 
       ipc.on('stop', (event, message) => {
           this.setState({question: ""})
           this.setState({background: "white"})
           this.setState({visible: false});
+          this.state.terminated = true;
       })
 
       ipc.on('result', (event, message) => {

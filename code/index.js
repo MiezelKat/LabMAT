@@ -6,7 +6,8 @@ const fs = require('fs');
 const parse = require('csv-parse/lib/sync');
 
 const currDirName = __dirname
-const csvData = fs.readFileSync(path.join(currDirName, '/input.csv'), {encoding: 'utf8'})
+const csvData = fs.readFileSync(path.join(currDirName, '../input.csv'), {encoding: 'utf8'})
+// const csvData = fs.readFileSync(path.join(currDirName, '../../../../input.csv'), {encoding: 'utf8'})
 const inputData = parse(csvData, {columns: true})
 let inputDataIndex = 0
 let outputData = [[]]
@@ -33,6 +34,21 @@ function createWindow () {
   win.on('closed', () => {
     win = null
   })
+
+  // window for timePerTask_std
+  presWin = new BrowserWindow({width: 800, height: 600});
+  presWin.loadURL(url.format({
+    pathname: path.join(__dirname, '/src/presentation_window.html'),
+    protocol: 'file:',
+    slashes: true
+  }))
+
+  //presWin.webContents.openDevTools()
+
+  presWin.on('closed', () => {
+    presWin = undefined
+  })
+
 }
 
 app.on('ready', createWindow)
@@ -50,7 +66,7 @@ app.on('activate', () => {
 })
 
 ipc.on('start', (event, message) => {
-
+  inputDataIndex = 0
   pIDValue = message
   if(presWin === undefined) {
     presWin = new BrowserWindow({width: 800, height: 600});
@@ -67,10 +83,12 @@ ipc.on('start', (event, message) => {
     })
 
     presWin.webContents.on('did-finish-load', () => {
+      presWin.webContents.send('start');
       win.webContents.send('question', [inputData[inputDataIndex].question_answer,inputData[inputDataIndex].word_answer]);
       presWin.webContents.send('question', inputData[inputDataIndex].question);
     })
   } else {
+    presWin.webContents.send('start');
     win.webContents.send('question', [inputData[inputDataIndex].question_answer,inputData[inputDataIndex].word_answer]);
     presWin.webContents.send('question', inputData[inputDataIndex].question);
   }
@@ -86,8 +104,8 @@ ipc.on('stop', (event, message) => {
     outputData.forEach((d) => {
       res += d + "\n";
     });
-// /../../../../
-    fs.writeFileSync(path.join(currDirName, `/output/${pIDValue}_${new Date().toISOString()}.csv`), res);
+    fs.writeFileSync(path.join(currDirName, `../output/${pIDValue}_${new Date().toISOString()}.csv`), res);
+    // fs.writeFileSync(path.join(currDirName, `../../../../output/${pIDValue}_${new Date().toISOString()}.csv`), res);
     outputData = [];
 
     if(inputData.length === inputDataIndex) {
