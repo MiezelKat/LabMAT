@@ -6,8 +6,8 @@ const fs = require('fs');
 const parse = require('csv-parse/lib/sync');
 
 const currDirName = __dirname
-const csvData = fs.readFileSync(path.join(currDirName, '../input.csv'), {encoding: 'utf8'})
-// const csvData = fs.readFileSync(path.join(currDirName, '../../../../input.csv'), {encoding: 'utf8'})
+// const csvData = fs.readFileSync(path.join(currDirName, '../input.csv'), {encoding: 'utf8'})
+const csvData = fs.readFileSync(path.join(currDirName, '../../../../input.csv'), {encoding: 'utf8'})
 const inputData = parse(csvData, {columns: true})
 let inputDataIndex = 0
 let outputData = [[]]
@@ -19,6 +19,8 @@ var sinceStarted = new Date()
 var sinceTaskStart = new Date()
 
 var pIDValue = ""
+
+var terminated = true
 
 function createWindow () {
   win = new BrowserWindow({width: 800, height: 600})
@@ -66,6 +68,7 @@ app.on('activate', () => {
 })
 
 ipc.on('start', (event, message) => {
+  terminated = false
   inputDataIndex = 0
   pIDValue = message
   if(presWin === undefined) {
@@ -97,6 +100,7 @@ ipc.on('start', (event, message) => {
 })
 
 ipc.on('stop', (event, message) => {
+  terminated = true
   presWin.webContents.send('stop');
 
   if(outputData.length > 0) {
@@ -104,8 +108,8 @@ ipc.on('stop', (event, message) => {
     outputData.forEach((d) => {
       res += d + "\n";
     });
-    fs.writeFileSync(path.join(currDirName, `../output/${pIDValue}_${new Date().toISOString()}.csv`), res);
-    // fs.writeFileSync(path.join(currDirName, `../../../../output/${pIDValue}_${new Date().toISOString()}.csv`), res);
+    // fs.writeFileSync(path.join(currDirName, `../output/${pIDValue}_${new Date().toISOString()}.csv`), res);
+    fs.writeFileSync(path.join(currDirName, `../../../../output/${pIDValue}_${new Date().toISOString()}.csv`), res);
     outputData = [];
 
     if(inputData.length === inputDataIndex) {
@@ -115,6 +119,9 @@ ipc.on('stop', (event, message) => {
 })
 
 ipc.on('next', (event, message) => {
+  if(terminated){
+    return;
+  }
     inputDataIndex++
     outputData.push([message.reason,Math.abs(sinceTaskStart.getTime() - (new Date()).getTime()),(new Date()),message.question])
 

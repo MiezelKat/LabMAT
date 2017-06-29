@@ -41,11 +41,11 @@ const StartButton = ({height, pIDValue, onTouchTap, onPIDChange, startEnabled, s
   </div>
 )
 
-const Main = ({height, time, question, word_answer, blocked, onStop, onFalse, onCorrect, ttime}) => (
+const Main = ({height, time, question, word_answer, blocked, onStop, onFalse, onCorrect, ttime, ttime_up}) => (
   <div>
     <div style={{height: height, display: "flex", flexDirection:"column", alignItems: "center", justifyContent: "center"}}>
       <span style={{fontSize: 80, textAlign: "center"}}>{question}</span>
-      <span style={{fontSize: 80, color: 'red', textAlign: "center"}}>{word_answer}</span>
+      <span style={{fontSize: 60, color: 'green', textAlign: "center"}}>{word_answer}</span>
     </div>
     <div style={{position: "absolute", bottom: "1%"}}>
       <MuiThemeProvider >
@@ -54,24 +54,32 @@ const Main = ({height, time, question, word_answer, blocked, onStop, onFalse, on
           <RaisedButton label="Stop [A]" style={{height: 50, width: 140, marginRight: 20, marginLeft: 90}} onTouchTap={onStop}/>
           <RaisedButton label="False [S]" disabled={blocked} style={{height: 50, width: 140, marginRight: 20, marginLeft: 40}} onTouchTap={onFalse}/>
           <RaisedButton label="Correct [D]" disabled={blocked} style={{height: 50, width: 140, marginRight: 20}} onTouchTap={onCorrect}/>
-          <span>Total time left: {ttime}</span>
+          <span style={{color: ttime_up ? "red" : "black"}}>Total time left: {ttime}</span>
         </div>
       </MuiThemeProvider >
     </div>
   </div>
 )
 
-var json = require('./../../settings.json'); //(with path)
-// var json = require('./../../../../../settings.json'); //(with path)
+// var json = require('./../../settings.json'); //(with path)
+var json = require('./../../../../../settings.json'); //(with path)
 
 const timePerTask_std = json["task_time"]
 const timeTotal_std = json["total_time"]
 const stopImediately_std = json["stop_imediately"]
 
 function createReadable(secs){
-  let minutes = Math.floor(secs / 60)
-  let seconds = secs - (minutes * 60)
-  return minutes + ":" + (seconds < 10 ? "0" : "") + seconds
+  if(secs > 0){
+    let minutes = Math.floor(secs / 60)
+    let seconds = secs - (minutes * 60)
+    return minutes + ":" + (seconds < 10 ? "0" : "") + seconds
+  }else if(secs < 0){
+    let minutes = Math.floor(-secs / 60)
+    let seconds = (-secs - (minutes * 60)) % 60
+    return "-" + minutes + ":" + (seconds < 10 ? "0" : "") + seconds
+  }else{
+    return "0:00"
+  }
 }
 
 class MainWindow extends React.Component {
@@ -100,7 +108,7 @@ class MainWindow extends React.Component {
       this.state.timeLeftTotal = this.state.timeTotal
       this.state.timeLeftTotal_str = createReadable(this.state.timeLeftTotal)
 
-      this.state.prepareStop = false
+      this.state.totaltime_up = false
 
       window.onresize = (event) => {
           this.setState({height: window.innerHeight})
@@ -158,6 +166,8 @@ class MainWindow extends React.Component {
       this.setState({blocked: false})
       this.state.startTimeStamp = Date()
 
+      this.setState({totaltime_up: false})
+
       this.state.timeLeftTotal = this.state.timeTotal
       this.setState({timeLeftTotal_str : createReadable(this.state.timeLeftTotal)})
 
@@ -167,11 +177,7 @@ class MainWindow extends React.Component {
         this.setState({timeLeftTotal_str : createReadable(this.state.timeLeftTotal)})
 
         if(this.state.timeLeftTotal <= 0) {
-          if(stopImediately_std){
-            this.stop()
-          }else{
-            this.state.prepareStop = true
-          }
+          this.setState({totaltime_up: true})
         }
       }, 1000)
     }
@@ -183,16 +189,13 @@ class MainWindow extends React.Component {
       this.setState({startEnabled: false})
       clearInterval(this.timer)
       clearInterval(this.total_timer)
-      this.state.prepareStop = false
+      this.setState({totaltime_up: false})
     }
 
     next(result, reason) {
       clearInterval(this.timer)
       //this.setState({ttime: this.state.ttime - 1})
       ipc.send("next", {result: result, reason: reason, question: this.state.question})
-      if(stopImediately_std && this.state.prepareStop){
-        this.stop()
-      }
     }
 
     handlePIDChanged(e){
@@ -243,6 +246,7 @@ class MainWindow extends React.Component {
                     timerEnabled={this.state.timerEnabled}
                     time={this.state.time}
                     ttime={this.state.timeLeftTotal_str}
+                    ttime_up={this.state.totaltime_up}
                     />
         } else {
           return <StartButton height={this.state.height}
